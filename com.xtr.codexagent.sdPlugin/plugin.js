@@ -682,9 +682,11 @@ function handleVoiceKeyDown(context, state) {
   const control = VOICE_CONTROL_BY_POSITION.get(getTileKey(state.tile));
   if (!control) return;
 
+  const pttState = xtrUi.voiceStatus.state;
+  const pttBlocked = pttState === "transcribing" || pttState === "thinking" || pttState === "speaking";
+
   if (control.id === "voice-ptt") {
-    const pttState = xtrUi.voiceStatus.state;
-    if (pttState === "transcribing" || pttState === "thinking" || pttState === "speaking") return;
+    if (pttBlocked) return;
     if (xtrUi.voicePressedContexts.has(context)) return;
     xtrUi.voicePressedContexts.add(context);
     setVoiceStatus({ state: "listening" });
@@ -697,6 +699,8 @@ function handleVoiceKeyDown(context, state) {
     );
     return;
   }
+
+  if (pttBlocked) return;
 
   if (control.id === "voice-tts") {
     sendBridgeAction(
@@ -1403,11 +1407,14 @@ function getDeviceMeta(device) {
 }
 
 function getVoiceControlMeta(control) {
+  const buttonsOpacity = xtrUi.voiceStatus.pttButtonOpacity ?? 1;
+
   if (control.id === "voice-tts") {
     const enabled = xtrUi.voiceStatus.ttsEnabled !== false;
     return {
       color: enabled ? "#2563EB" : "#64748B",
       label: enabled ? "語音播放" : "播放關閉",
+      opacity: buttonsOpacity,
       icon: "",
       iconDataUri: control.iconFile ? loadMenuIconDataUri(control.iconFile, enabled ? "#2563EB" : "#64748B") : "",
     };
@@ -1420,7 +1427,7 @@ function getVoiceControlMeta(control) {
     return {
       color,
       label,
-      opacity: xtrUi.voiceStatus.pttButtonOpacity ?? 1,
+      opacity: buttonsOpacity,
       icon: "",
       iconDataUri: control.iconFile ? loadMenuIconDataUri(control.iconFile, color) : "",
     };
@@ -1429,6 +1436,7 @@ function getVoiceControlMeta(control) {
   return {
     color: control.color,
     label: control.label,
+    opacity: buttonsOpacity,
     icon: "",
     iconDataUri: control.iconFile ? loadMenuIconDataUri(control.iconFile, control.color) : "",
   };
