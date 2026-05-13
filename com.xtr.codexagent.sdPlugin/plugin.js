@@ -71,6 +71,7 @@ const xtrUi = {
     ttsAudioActive: false,
     ttsAudioUpdatedAt: 0,
     updatedAt: 0,
+    pttButtonOpacity: 1,
   },
   introFrameTimer: null,
   introPhase: 0,
@@ -107,7 +108,7 @@ const UBIKE_XTR_OVERLAY_LABEL = "YouBike";
 const CLEAR_TITLE_RESTORE = "__xtr_clear_title__";
 const UBIKE_SUCCESS_PULSE_MS = 1100;
 const LONG_PRESS_MS = 650;
-const HIDDEN_COMMAND_TEXT = "請用30個字介紹你自己";
+const HIDDEN_COMMAND_TEXT = "請介紹你自己";
 const HIDDEN_COMMAND_POSITION = "4,0";
 const HOME_PRESS_ANIM_INTERVAL_MS = 30;
 const MANAGED_ACTIONS = new Set([
@@ -682,6 +683,8 @@ function handleVoiceKeyDown(context, state) {
   if (!control) return;
 
   if (control.id === "voice-ptt") {
+    const pttState = xtrUi.voiceStatus.state;
+    if (pttState === "transcribing" || pttState === "thinking" || pttState === "speaking") return;
     if (xtrUi.voicePressedContexts.has(context)) return;
     xtrUi.voicePressedContexts.add(context);
     setVoiceStatus({ state: "listening" });
@@ -1043,6 +1046,15 @@ function updateVoiceWaveState() {
     }))
     .filter((ripple) => ripple.alpha > 0)
     .slice(-MIC_MAX_RIPPLES);
+
+  const pttBlocked = state === "transcribing" || state === "thinking" || state === "speaking";
+  const pttOpacityTarget = pttBlocked ? 0 : 1;
+  const pttOpacityCurrent = xtrUi.voiceStatus.pttButtonOpacity ?? 1;
+  const pttOpacityNext = pttOpacityCurrent + (pttOpacityTarget - pttOpacityCurrent) * 0.4;
+  xtrUi.voiceStatus = {
+    ...xtrUi.voiceStatus,
+    pttButtonOpacity: pttOpacityNext < 0.01 ? 0 : (pttOpacityNext > 0.99 ? 1 : pttOpacityNext),
+  };
 }
 
 function hasFreshTtsAudio() {
@@ -1408,6 +1420,7 @@ function getVoiceControlMeta(control) {
     return {
       color,
       label,
+      opacity: xtrUi.voiceStatus.pttButtonOpacity ?? 1,
       icon: "",
       iconDataUri: control.iconFile ? loadMenuIconDataUri(control.iconFile, color) : "",
     };
@@ -1506,7 +1519,10 @@ function renderMenuCell(cell, tileSize) {
     opacity: textOpacity,
   });
 
-  return `${icon}${text}`;
+  const cellOpacity = meta.opacity !== undefined ? meta.opacity : 1;
+  if (cellOpacity <= 0) return "";
+  const content = `${icon}${text}`;
+  return cellOpacity >= 1 ? content : `<g opacity="${cellOpacity.toFixed(3)}">${content}</g>`;
 }
 
 function renderMenuLabelLines(lines, x, y, options = {}) {
