@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "XTR Stream Deck Bridge",
+  "version": "1.1",
+  "description": "連結 Stream Deck 與瀏覽器，用於操作 XTR host ft / Codex 頁面並提供麥克風聲波動畫資料",
+  "permissions": [
+    "tabs",
+    "alarms",
+    "offscreen"
+  ],
+  "action": {
+    "default_title": "XTR 麥克風授權"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["page-audio-meter.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XTR 麥克風授權</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #07111f;
+        color: #e5f7fb;
+      }
+
+      html {
+        min-height: 260px;
+        min-width: 360px;
+      }
+
+      body {
+        align-items: center;
+        box-sizing: border-box;
+        display: grid;
+        min-height: 260px;
+        min-width: 360px;
+        margin: 0;
+        padding: 24px;
+        width: 360px;
+      }
+
+      main {
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 24px;
+        line-height: 1.2;
+        margin: 0 0 12px;
+      }
+
+      p {
+        color: #a8c7d0;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 20px;
+      }
+
+      button {
+        appearance: none;
+        background: #22d3ee;
+        border: 0;
+        border-radius: 8px;
+        color: #042f3a;
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 16px;
+        font-weight: 700;
+        justify-content: center;
+        min-width: 128px;
+        padding: 12px 16px;
+        white-space: nowrap;
+      }
+
+      #status {
+        color: #cffafe;
+        font-size: 14px;
+        margin-top: 16px;
+        min-height: 22px;
+      }
+
+      @media (min-width: 700px) {
+        html {
+          min-height: 100%;
+          min-width: 0;
+        }
+
+        body {
+          justify-items: center;
+          min-height: 100vh;
+          min-width: 0;
+          width: auto;
+        }
+
+        main {
+          max-width: 440px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>允許 XTR 使用麥克風</h1>
+      <p>Stream Deck 的麥克風聲波按鍵只需要即時音量，不會儲存或上傳錄音內容。</p>
+      <button id="grant">允許麥克風</button>
+      <div id="status">等待授權...</div>
+    </main>
+    <script src="mic-permission.js"></script>
+  </body>
+</html>

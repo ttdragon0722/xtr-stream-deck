@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XTR Mic Wave Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #020617;
+        color: #ecfeff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 50% 24%, rgba(34, 211, 238, 0.24), transparent 34rem),
+          linear-gradient(160deg, #03121c 0%, #020617 52%, #050816 100%);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100vh;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      header,
+      footer {
+        align-items: center;
+        display: flex;
+        gap: 14px;
+        justify-content: space-between;
+        padding: 18px 22px;
+      }
+
+      header {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      }
+
+      footer {
+        border-top: 1px solid rgba(148, 163, 184, 0.16);
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .dot {
+        background: #64748b;
+        border-radius: 50%;
+        box-shadow: 0 0 0 8px rgba(100, 116, 139, 0.12);
+        height: 12px;
+        width: 12px;
+      }
+
+      .dot.live {
+        background: #22d3ee;
+        box-shadow: 0 0 28px rgba(34, 211, 238, 0.8);
+      }
+
+      #status {
+        color: #a5f3fc;
+        font-size: 13px;
+        min-width: 150px;
+        text-align: right;
+      }
+
+      main {
+        align-items: center;
+        display: grid;
+        gap: 28px;
+        grid-template-columns: minmax(360px, 1fr) minmax(180px, 240px);
+        min-height: 0;
+        padding: 28px;
+      }
+
+      .stage-wrap {
+        align-items: center;
+        display: grid;
+        justify-items: center;
+        min-height: 0;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #stage {
+        aspect-ratio: 1;
+        height: min(72vh, 76vw);
+        max-height: 720px;
+        max-width: 720px;
+        width: min(72vh, 76vw);
+      }
+
+      .preview-stack {
+        align-items: center;
+        display: grid;
+        gap: 14px;
+        justify-items: center;
+      }
+
+      #keyPreview {
+        border-radius: 20px;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34), 0 0 40px rgba(34, 211, 238, 0.18);
+        height: 144px;
+        width: 144px;
+      }
+
+      .meter {
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 999px;
+        height: 10px;
+        overflow: hidden;
+        width: 144px;
+      }
+
+      #meterFill {
+        background: linear-gradient(90deg, #14b8a6, #22d3ee, #a3e635);
+        border-radius: inherit;
+        height: 100%;
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+
+      .controls {
+        align-items: center;
+        display: flex;
+        flex: 1 1 760px;
+        gap: 14px;
+        justify-content: center;
+      }
+
+      button {
+        appearance: none;
+        background: rgba(15, 23, 42, 0.76);
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 8px;
+        color: #ecfeff;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 800;
+        min-height: 42px;
+        padding: 0 14px;
+      }
+
+      button.active,
+      button:hover {
+        background: #22d3ee;
+        border-color: #22d3ee;
+        color: #042f3a;
+      }
+
+      .slider {
+        align-items: center;
+        display: grid;
+        gap: 6px;
+        min-width: 132px;
+      }
+
+      label {
+        color: #bae6fd;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      input[type="range"] {
+        accent-color: #22d3ee;
+        width: 132px;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+        }
+
+        main {
+          grid-template-columns: 1fr;
+          padding: 18px;
+        }
+
+        #stage {
+          height: min(78vw, 520px);
+          width: min(78vw, 520px);
+        }
+
+        header,
+        footer {
+          padding: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand"><span id="dot" class="dot"></span><span>XTR MIC WAVE</span></div>
+      <div id="status">待機</div>
+    </header>
+
+    <main>
+      <section class="stage-wrap">
+        <canvas id="stage" width="720" height="720"></canvas>
+      </section>
+
+      <aside class="preview-stack">
+        <canvas id="keyPreview" width="144" height="144"></canvas>
+        <div class="meter"><div id="meterFill"></div></div>
+      </aside>
+    </main>
+
+    <footer>
+      <div class="controls">
+        <button id="micButton">開始</button>
+        <button id="modeBars" class="active">Bars</button>
+        <button id="modeOrb">Orb</button>
+        <button id="modeRibbon">Ribbon</button>
+        <div class="slider">
+          <label for="gain">敏感度</label>
+          <input id="gain" type="range" min="1" max="8" value="4.4" step="0.1">
+        </div>
+        <div class="slider">
+          <label for="bounce">彈跳</label>
+          <input id="bounce" type="range" min="0" max="1" value="0.55" step="0.01">
+        </div>
+        <div class="slider">
+          <label for="trail">殘影</label>
+          <input id="trail" type="range" min="0" max="0.55" value="0.20" step="0.01">
+        </div>
+        <div class="slider">
+          <label for="glow">光暈</label>
+          <input id="glow" type="range" min="0" max="1.4" value="0.82" step="0.01">
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const stageCtx = stage.getContext("2d");
+      const keyPreview = document.getElementById("keyPreview");
+      const keyCtx = keyPreview.getContext("2d");
+      const meterFill = document.getElementById("meterFill");
+      const statusEl = document.getElementById("status");
+      const dot = document.getElementById("dot");
+      const micButton = document.getElementById("micButton");
+      const modeButtons = {
+        bars: document.getElementById("modeBars"),
+        orb: document.getElementById("modeOrb"),
+        ribbon: document.getElementById("modeRibbon"),
+      };
+
+      const controls = {
+        gain: document.getElementById("gain"),
+        bounce: document.getElementById("bounce"),
+        trail: document.getElementById("trail"),
+        glow: document.getElementById("glow"),
+      };
+
+      const state = {
+        audioContext: null,
+        analyser: null,
+        source: null,
+        stream: null,
+        samples: null,
+        level: 0,
+        lastVolume: 0,
+        visualLevel: 0,
+        peak: 0,
+        phase: 0,
+        mode: "bars",
+        bars: Array.from({ length: 13 }, () => 0.08),
+        bridge: null,
+        bridgeReady: false,
+      };
+
+      micButton.addEventListener("click", () => {
+        if (state.stream) stopMic();
+        else startMic();
+      });
+
+      for (const [mode, button] of Object.entries(modeButtons)) {
+        button.addEventListener("click", () => setMode(mode));
+      }
+
+      function setMode(mode) {
+        state.mode = mode;
+        for (const [name, button] of Object.entries(modeButtons)) {
+          button.classList.toggle("active", name === mode);
+        }
+      }
+
+      async function startMic() {
+        try {
+          statusEl.textContent = "請允許麥克風";
+          state.stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            },
+            video: false,
+          });
+
+          state.audioContext = new AudioContext();
+          await state.audioContext.resume();
+          state.analyser = state.audioContext.createAnalyser();
+          state.analyser.fftSize = 512;
+          state.analyser.smoothingTimeConstant = 0.3;
+          state.samples = new Uint8Array(state.analyser.frequencyBinCount);
+          state.source = state.audioContext.createMediaStreamSource(state.stream);
+          state.source.connect(state.analyser);
+          micButton.textContent = "停止";
+          statusEl.textContent = "LIVE";
+          dot.classList.add("live");
+          connectBridge();
+        } catch (error) {
+          statusEl.textContent = error?.message || "麥克風失敗";
+          stopMic();
+        }
+      }
+
+      function stopMic() {
+        if (state.source) {
+          try { state.source.disconnect(); } catch (_) {}
+          state.source = null;
+        }
+
+        if (state.stream) {
+          for (const track of state.stream.getTracks()) track.stop();
+          state.stream = null;
+        }
+
+        if (state.audioContext) {
+          state.audioContext.close();
+          state.audioContext = null;
+        }
+
+        state.analyser = null;
+        state.samples = null;
+        state.level = 0;
+        state.lastVolume = 0;
+        state.peak = 0;
+        sendBridge({ type: "mic-status", status: "stopped" });
+        closeBridge();
+        micButton.textContent = "開始";
+        statusEl.textContent = "待機";
+        dot.classList.remove("live");
+      }
+
+      function sampleMic() {
+        if (!state.analyser || !state.samples) return;
+
+        state.analyser.getByteFrequencyData(state.samples);
+        let sum = 0;
+        let peak = 0;
+        const voiceRangeLength = Math.min(50, state.samples.length);
+
+        for (let i = 0; i < voiceRangeLength; i++) {
+          const value = state.samples[i];
+          sum += value;
+          peak = Math.max(peak, value / 255);
+        }
+
+        const average = sum / voiceRangeLength;
+        const normalizedVolume = average / 255;
+        const sensitivityCurve = Math.pow(normalizedVolume, 0.7);
+        let amplifiedVolume = Math.min(0.8, sensitivityCurve * 1.5);
+        if (amplifiedVolume < 0.45) amplifiedVolume = 0;
+        state.lastVolume = state.lastVolume * 0.6 + amplifiedVolume * 0.4;
+        state.level = state.lastVolume;
+        state.peak = Math.min(0.8, peak);
+        sendBridge({
+          type: "mic-level",
+          level: state.level,
+          peak: state.peak,
+          ts: Date.now(),
+        });
+      }
+
+      function connectBridge() {
+        if (state.bridge && state.bridge.readyState <= WebSocket.OPEN) return;
+
+        try {
+          state.bridge = new WebSocket("ws://localhost:9999");
+        } catch (_) {
+          return;
+        }
+
+        state.bridge.addEventListener("open", () => {
+          state.bridgeReady = true;
+          sendBridge({ type: "mic-status", status: "started" });
+        });
+
+        state.bridge.addEventListener("message", (event) => {
+          let msg;
+          try { msg = JSON.parse(event.data); } catch (_) { return; }
+          if (msg.type !== "mic-control") return;
+
+          if (msg.command === "start") {
+            if (!state.stream) startMic();
+            sendBridge({ id: msg.id, result: "MIC_STARTED" });
+            sendBridge({ type: "mic-status", status: "started" });
+          }
+
+          if (msg.command === "stop") {
+            sendBridge({ id: msg.id, result: "MIC_STOPPED" });
+          }
+        });
+
+        state.bridge.addEventListener("close", () => {
+          state.bridgeReady = false;
+          if (state.stream) setTimeout(connectBridge, 1200);
+        });
+
+        state.bridge.addEventListener("error", () => {
+          state.bridgeReady = false;
+        });
+      }
+
+      function closeBridge() {
+        if (!state.bridge) return;
+        state.bridgeReady = false;
+        state.bridge.close();
+        state.bridge = null;
+      }
+
+      function sendBridge(payload) {
+        if (!state.bridge || state.bridge.readyState !== WebSocket.OPEN) return;
+        state.bridge.send(JSON.stringify(payload));
+      }
+
+      function tick() {
+        sampleMic();
+        const bounce = Number(controls.bounce.value);
+        const trail = Number(controls.trail.value);
+        state.visualLevel += (state.level - state.visualLevel) * (0.18 + bounce * 0.45);
+        state.phase += 0.035 + state.visualLevel * 0.13;
+        meterFill.style.transform = `scaleX(${state.visualLevel.toFixed(3)})`;
+
+        drawWave(stageCtx, 720, {
+          level: state.visualLevel,
+          peak: state.peak,
+          phase: state.phase,
+          trail,
+          glow: Number(controls.glow.value),
+          mode: state.mode,
+          bars: state.bars,
+        });
+
+        drawWave(keyCtx, 144, {
+          level: state.visualLevel,
+          peak: state.peak,
+          phase: state.phase,
+          trail: 0,
+          glow: Number(controls.glow.value),
+          mode: state.mode,
+          bars: state.bars,
+        });
+
+        requestAnimationFrame(tick);
+      }
+
+      function drawWave(ctx, size, options) {
+        const scale = size / 144;
+        const glow = Math.min(1.5, options.glow);
+        const level = options.level;
+        const peak = options.peak;
+        const trailAlpha = options.trail;
+
+        if (trailAlpha > 0) {
+          ctx.fillStyle = `rgba(2, 6, 23, ${0.24 + trailAlpha})`;
+          ctx.fillRect(0, 0, size, size);
+        } else {
+          const bg = ctx.createRadialGradient(size * 0.5, size * 0.38, 0, size * 0.5, size * 0.5, size * 0.76);
+          bg.addColorStop(0, "#164e63");
+          bg.addColorStop(0.52, "#0f172a");
+          bg.addColorStop(1, "#020617");
+          ctx.fillStyle = bg;
+          roundRect(ctx, 0, 0, size, size, 20 * scale);
+          ctx.fill();
+        }
+
+        ctx.save();
+        roundRect(ctx, 0, 0, size, size, 20 * scale);
+        ctx.clip();
+
+        const pulse = 26 + (level * 44 + peak * 18) * glow;
+        const radial = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, pulse * scale * 1.8);
+        radial.addColorStop(0, `rgba(34, 211, 238, ${0.22 + level * 0.22})`);
+        radial.addColorStop(1, "rgba(34, 211, 238, 0)");
+        ctx.fillStyle = radial;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, pulse * scale * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (options.mode === "orb") drawOrb(ctx, size, scale, options);
+        else if (options.mode === "ribbon") drawRibbon(ctx, size, scale, options);
+        else drawBars(ctx, size, scale, options);
+
+        ctx.fillStyle = "rgba(207, 250, 254, 0.78)";
+        ctx.font = `${Math.round(13 * scale)}px Arial, Helvetica, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(state.stream ? "LIVE" : "MIC", size / 2, size - 17 * scale);
+        ctx.restore();
+      }
+
+      function drawBars(ctx, size, scale, options) {
+        const bars = options.bars;
+        const count = bars.length;
+        const centerY = size / 2;
+        const barWidth = 6.6 * scale;
+        const gap = 4.4 * scale;
+        const totalWidth = count * barWidth + (count - 1) * gap;
+        const startX = (size - totalWidth) / 2;
+
+        for (let index = 0; index < count; index++) {
+          const distance = Math.abs(index - (count - 1) / 2);
+          const bounce = (Math.sin(options.phase * 4.2 + index * 0.92) + 1) / 2;
+          const shape = 1 - distance / ((count + 2) / 2);
+          const target = clamp(options.level * (0.32 + shape * 1.35) + bounce * 0.08 + options.peak * 0.16, 0.05, 1);
+          bars[index] += (target - bars[index]) * 0.54;
+          const h = (12 + bars[index] * 94) * scale;
+          const x = startX + index * (barWidth + gap);
+          const y = centerY - h / 2;
+          const hue = Math.round(172 + bars[index] * 58);
+          ctx.fillStyle = `hsl(${hue}, 86%, ${Math.round(48 + bars[index] * 18)}%)`;
+          roundRect(ctx, x, y, barWidth, h, 3.5 * scale);
+          ctx.fill();
+        }
+      }
+
+      function drawOrb(ctx, size, scale, options) {
+        const rings = 5;
+        for (let i = rings; i >= 1; i--) {
+          const r = (18 + i * 9 + options.level * 38 + Math.sin(options.phase * 4 + i) * 4) * scale;
+          ctx.strokeStyle = `rgba(${20 + i * 22}, ${184 + i * 8}, 238, ${0.08 + options.level * 0.16})`;
+          ctx.lineWidth = (2 + options.level * 5) * scale;
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        const core = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, 42 * scale);
+        core.addColorStop(0, "#a3e635");
+        core.addColorStop(0.45, "#22d3ee");
+        core.addColorStop(1, "rgba(34, 211, 238, 0)");
+        ctx.globalAlpha = 0.72 + options.level * 0.28;
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, (20 + options.level * 28) * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      function drawRibbon(ctx, size, scale, options) {
+        const center = size / 2;
+        const amplitude = (10 + options.level * 48 + options.peak * 14) * scale;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        for (let layer = 0; layer < 3; layer++) {
+          ctx.beginPath();
+          for (let x = 18 * scale; x <= size - 18 * scale; x += 2 * scale) {
+            const t = x / size;
+            const y = center
+              + Math.sin(t * Math.PI * 4 + options.phase * 6 + layer * 0.7) * amplitude * (0.8 - layer * 0.16)
+              + Math.sin(t * Math.PI * 11 + options.phase * 3) * amplitude * 0.16;
+            if (x === 18 * scale) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = [`rgba(34, 211, 238, 0.92)`, `rgba(163, 230, 53, 0.62)`, `rgba(45, 212, 191, 0.46)`][layer];
+          ctx.lineWidth = (7 - layer * 1.8) * scale;
+          ctx.stroke();
+        }
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      tick();
+    </script>
+  </body>
+</html>

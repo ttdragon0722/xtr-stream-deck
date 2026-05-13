@@ -1,0 +1,25 @@
+{
+  "name": "@xtr/ft-streamdeck",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Stream Deck companion for controlling XTR host ft workflows",
+  "scripts": {
+    "install:plugin": "node install.js",
+    "restart": "streamdeck restart com.xtr.codexagent",
+    "validate": "streamdeck validate com.xtr.codexagent.sdPlugin",
+    "check:js": "node --check install.js && node --check com.xtr.codexagent.sdPlugin/plugin.js && node --check chrome-extension/background.js && node --check chrome-extension/content.js && node --check chrome-extension/offscreen.js && node --check chrome-extension/mic-permission.js && node --check chrome-extension/page-audio-meter.js"
+  },
+  "keywords": [
+    "streamdeck",
+    "xtr",
+    "host-ft"
+  ],
+  "author": "xtr",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.20.0"
+  }
+}

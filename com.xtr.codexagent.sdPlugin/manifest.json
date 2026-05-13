@@ -1,0 +1,106 @@
+{
+	"Author": "xtr",
+	"CodePath": "plugin.js",
+	"CodePathMac": "plugin.sh",
+	"CodePathWin": "plugin.bat",
+	"Description": "XTR Multiverse Stream Deck 外掛 - 操作 host ft、啟動 Codex、顯示系統資訊",
+	"Icon": "imgs/plugin",
+	"Name": "XTR Stream Deck",
+	"Actions": [
+		{
+			"Icon": "imgs/action-run",
+			"Name": "開啟 XTR 專案",
+			"States": [
+				{
+					"Image": "imgs/action-run"
+				}
+			],
+			"SupportedInMultiActions": true,
+			"UUID": "com.xtr.codexagent.runscript"
+		},
+		{
+			"Icon": "imgs/action-sysinfo",
+			"Name": "系統資訊",
+			"States": [
+				{
+					"Image": "imgs/action-sysinfo"
+				}
+			],
+			"SupportedInMultiActions": false,
+			"UUID": "com.xtr.codexagent.sysinfo"
+		},
+		{
+			"Icon": "imgs/action-openapp",
+			"Name": "開啟 Codex",
+			"States": [
+				{
+					"Image": "imgs/action-openapp"
+				}
+			],
+			"SupportedInMultiActions": true,
+			"UUID": "com.xtr.codexagent.openapp"
+		},
+		{
+			"Icon": "imgs/action-webclick",
+			"Name": "Codex 網頁送出",
+			"States": [
+				{
+					"Image": "imgs/action-webclick"
+				}
+			],
+			"SupportedInMultiActions": true,
+			"UUID": "com.xtr.codexagent.webclick"
+		},
+		{
+			"Icon": "imgs/action-customclick",
+			"Name": "自訂網頁點擊",
+			"States": [
+				{
+					"Image": "imgs/action-customclick"
+				}
+			],
+			"SupportedInMultiActions": true,
+			"UUID": "com.xtr.codexagent.customclick"
+		},
+		{
+			"Icon": "imgs/action-customclick",
+			"Name": "YouBike XTR",
+			"States": [
+				{
+					"Image": "imgs/action-customclick"
+				}
+			],
+			"SupportedInMultiActions": true,
+			"UUID": "com.xtr.codexagent.ubikextr"
+		},
+		{
+			"Icon": "imgs/action-sysinfo",
+			"Name": "麥克風聲波",
+			"States": [
+				{
+					"Image": "imgs/action-sysinfo"
+				}
+			],
+			"SupportedInMultiActions": false,
+			"UUID": "com.xtr.codexagent.micwave"
+		}
+	],
+	"OS": [
+		{
+			"MinimumVersion": "13",
+			"Platform": "mac"
+		},
+		{
+			"MinimumVersion": "10",
+			"Platform": "windows"
+		}
+	],
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"SDKVersion": 2,
+	"UUID": "com.xtr.codexagent",
+	"Version": "1.1.0.0",
+	"Category": "XTR Multiverse",
+	"CategoryIcon": "imgs/plugin"
+}
