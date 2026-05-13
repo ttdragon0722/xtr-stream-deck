@@ -611,7 +611,8 @@ function handleManagedKeyDown(msg) {
 function handleManagedKeyUp(msg) {
   const state = xtrUi.contexts.get(msg.context);
   clearLongPressTimer(msg.context);
-  if (xtrUi.longPressFired.has(msg.context)) {
+  const longPressFired = xtrUi.longPressFired.has(msg.context);
+  if (longPressFired) {
     xtrUi.longPressFired.delete(msg.context);
   }
   if (xtrUi.hiddenLongPressFired.has(msg.context)) {
@@ -627,6 +628,13 @@ function handleManagedKeyUp(msg) {
   }
   if (xtrUi.layer === "voice") {
     handleVoiceKeyUp(msg.context, state);
+    if (!longPressFired && isTopLeftTile(state?.tile)) {
+      const userDevice = DEVICE_BY_ID.get("user");
+      if (userDevice) sendDevicePrompt(msg.context, state, userDevice);
+      xtrUi.layer = "menu";
+      xtrUi.selectedDeviceId = null;
+      renderUiLayer();
+    }
   }
 }
 
